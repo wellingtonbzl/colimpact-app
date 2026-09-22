@@ -59,7 +59,7 @@ def deslocamento_lateral_engaste(nNos, DeltaZ, Nk, q, QT, MT, EIef, Pos_Fveic=No
         else:
             A[i, i - 2] = EIef[i]
             A[i, i - 1] = Nk * (DeltaZ ** 2) - 2 * EIef[i] - 2 * EIef[i + 1]
-            A[i, i] = -2 * Nk * (DeltaZ ** 2) + EIef[i] + 4 * EIef[i + 1] + EIef[i + 2]
+            A[i, i] = -2 * Nk * (DeltaZ ** 2) + EIef[i] + 4 * EIef[i + 2] + EIef[i + 2]
             A[i, i + 1] = Nk * (DeltaZ ** 2) - 2 * EIef[i + 1] - 2 * EIef[i + 2]
             A[i, i + 2] = EIef[i + 2]
 
@@ -640,16 +640,31 @@ with st.sidebar:
         QTd = 0.0
 
     st.header("7. Impacto de veiculo (FEE)")
-    Fveic = st.number_input("Fveic - Forca de impacto do veiculo (kN)", value=50.0, step=5.0)
-    Pos_Fveic = st.number_input("Posicao do impacto ao longo do pilar (m)", value=0.5, min_value=0.0,
-                                 max_value=float(L), step=0.1)
+    categoria_impacto = st.selectbox(
+        "Categoria do Veículo (Tabela 1 - NBR 6120)", 
+        ["I", "II", "III", "IV", "V"]
+    )
+    direcao_impacto = st.radio("Direção da força", ["Frontal (Fx)", "Lateral (Fy)"], horizontal=True)
+    
+    dict_categorias = {
+        "I": {"Fx": 100.0, "Fy": 50.0, "H": 0.5},
+        "II": {"Fx": 180.0, "Fy": 90.0, "H": 0.5},
+        "III": {"Fx": 240.0, "Fy": 120.0, "H": 1.0},
+        "IV": {"Fx": 320.0, "Fy": 160.0, "H": 1.0},
+        "V": {"Fx": 320.0, "Fy": 160.0, "H": 1.0},
+    }
+    
+    valores_cat = dict_categorias[categoria_impacto]
+    Fveic = valores_cat["Fx"] if "Frontal" in direcao_impacto else valores_cat["Fy"]
+    Pos_Fveic = valores_cat["H"]
+    
+    st.info(f"**Força de impacto aplicada (Fveic):** {Fveic} kN\n\n**Altura de aplicação (Pos_Fveic):** {Pos_Fveic} m")
 
-    st.header("8. Parametros do 2a ordem / iteracao")
-    gamma_f3 = st.number_input("gamma_f3 (ponderacao NBR 6118 15.3.1)", value=1.1, step=0.05)
-    tol_iter = st.number_input("Tolerancia de convergencia", value=1e-4, format="%.1e")
-    max_iter = st.number_input("Numero maximo de iteracoes", value=100, min_value=5, step=5)
-    incremento_chi = st.number_input("Incremento de curvatura no diagrama M-chi", value=1e-5,
-                                      format="%.1e")
+    # Parâmetros de 2a ordem / iteração fixados no código (removidos da interface gráfica)
+    gamma_f3 = 1.1
+    tol_iter = 1e-4
+    max_iter = 100
+    incremento_chi = 1e-5
 
     calcular = st.button("Calcular", type="primary", use_container_width=True)
 
